@@ -27,6 +27,8 @@ class PendaftarSeeder extends Seeder
                 'program_pilihan' => 'reguler',
                 'dari_siapa' => 'Teman',
                 'is_verified' => true,
+                'created_at' => '2025-12-18 05:17:43',
+                'updated_at' => '2025-12-18 05:17:43',
             ],
         ];
 
@@ -54,6 +56,8 @@ class PendaftarSeeder extends Seeder
                 'program_pilihan' => $program[array_rand($program)],
                 'dari_siapa' => $sumber[array_rand($sumber)],
                 'is_verified' => rand(0,1),
+                'created_at' => Carbon::now()->subDays(rand(1, 365)),
+                'updated_at' => Carbon::now()->subDays(rand(1, 365)),
             ];
         }
 
