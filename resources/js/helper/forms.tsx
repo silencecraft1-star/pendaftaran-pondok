@@ -1,5 +1,7 @@
-import { Textarea } from '@headlessui/react';
-import React from 'react';
+import React, { useState } from 'react';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
 
 // --- INTERFACE & TYPES (Diekspor untuk digunakan di Pendaftaran.tsx) ---
 
@@ -13,6 +15,7 @@ export interface FormData {
     alamatSekolah: string;
     namaPanjangOrtu: string;
     profesiOrtu: string;
+    jenisKelamin: string;
     alamatOrtu: string;
     programPilihan: string;
     dariSiapa: string;
@@ -89,6 +92,18 @@ export const PersonalDataForm: React.FC<FormComponentProps> = ({
         } as Partial<FormData>);
     };
 
+    const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        updateFormData({
+            [name as keyof FormData]: value,
+        } as Partial<FormData>);
+    };
+
+    const programOptions = [
+        { value: 'laki', label: 'Laki Laki' },
+        { value: 'perempuan', label: 'Perempuan' },
+    ];
+
     return (
         <div className="rounded-lg bg-white p-4">
             <Input
@@ -99,6 +114,16 @@ export const PersonalDataForm: React.FC<FormComponentProps> = ({
                 onChange={handleChange}
                 required
             />
+
+            <RadioGroup
+                label="Jenis Kelamin"
+                name="jenisKelamin"
+                value={formData.jenisKelamin}
+                onChange={handleRadioChange}
+                options={programOptions}
+                required
+            />
+
             <Input
                 label="Tanggal Lahir"
                 name="tanggalLahir"
@@ -147,7 +172,7 @@ const RadioGroup: React.FC<{
         <div className="block text-left text-sm font-medium text-gray-700">
             {label} {required && <span className="text-red-500">*</span>}
         </div>
-        <div className="mt-2 space-y-2 grid grid-cols-2">
+        <div className="mt-2 grid grid-cols-2 space-y-2">
             {options.map((option) => (
                 <div key={option.value} className="flex items-center">
                     <input
@@ -157,7 +182,7 @@ const RadioGroup: React.FC<{
                         value={option.value}
                         checked={value === option.value}
                         onChange={onChange}
-                        className="h-4 w-4 border-red-500 text-green-600 bg-red-500 focus:ring-green-500 accent-green-500"
+                        className="h-4 w-4 border-red-500 bg-red-500 text-green-600 accent-green-500 focus:ring-green-500"
                         required={required}
                     />
                     <label
@@ -332,9 +357,75 @@ export const ConfirmationStep: React.FC<FormComponentProps> = ({
     formData,
     prevStep,
 }) => {
-    const handleSubmit = () => {
-        console.log('Data Pendaftaran Siap Disubmit:', formData);
-        alert('Pendaftaran berhasil! Silakan cek konsol untuk melihat data.');
+    const mySwal = withReactContent(Swal);
+
+    const val: (keyof FormData)[] = [
+        "nama", 'dariSiapa', "programPilihan", "tanggalLahir", 
+        "tempatLahir", "teleponOrangTua", "jenisKelamin", 
+        "alamatPribadi", "namaSekolah", "alamatSekolah",
+        "namaPanjangOrtu", "profesiOrtu", "alamatOrtu"];
+    const empty = val.filter((data) => formData[data] === "");
+    const [cekVal, setCekVal] =  useState<(keyof FormData)[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
+
+    const handleSubmit = async () => {
+        if (!csrfToken) {
+            throw new Error('CSRF token tidak ditemukan');
+        }
+
+        if(empty.length > 0) {
+            setCekVal(empty);
+        }
+        else {
+            setIsLoading(true);
+            const res = await fetch('/submit-data', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken,
+                    'Content-Type': 'application/json',
+                    "Accept" : 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+    
+            const data = await res.json();
+            setIsLoading(false);
+
+            if(data.success == true) {
+                mySwal.fire({
+                    icon: 'success',
+                    title: 'Data berhasil disimpan',
+                    text: 'Silakan Menghubungi Admin Kami untuk melakukan Pembayaran',
+                    showConfirmButton: true,
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    denyButtonColor: 'green',
+                    denyButtonText: 'Hubungi Admin',
+                    confirmButtonText: "Halaman Utama",
+                    cancelButtonText: "Tutup",
+                    preConfirm(inputValue) {
+                        window.location.href = "https://ppmarrahmah.nustrastudio.my.id";
+                    },
+                    preDeny(value) {
+                        window.location.href = "https://api.whatsapp.com/send/?phone=6285850180698&text&type=phone_number&app_absent=0";
+                    },
+                });
+            }
+            else {
+                mySwal.fire({
+                    icon: 'error',
+                    title: 'Data gagal disimpan',
+                    showConfirmButton: true,
+                    confirmButtonText: "Tutup",
+                });
+            }
+        }
+
     };
 
     const SummaryField: React.FC<{
@@ -344,16 +435,21 @@ export const ConfirmationStep: React.FC<FormComponentProps> = ({
     }> = ({ label, value, className = '' }) => (
         <div className={`p-2 ${className}`}>
             <span className="font-medium text-gray-700">{label}:</span>
-            <div className="mt-1 text-gray-900">{value || <span className="text-gray-400">-</span>}</div>
+            <div className="mt-1 text-gray-900">
+                {value || <span className="text-gray-400">-</span>}
+            </div>
         </div>
     );
 
     // Fungsi untuk mendapatkan label program
     const getProgramLabel = (value: string) => {
-        switch(value) {
-            case 'reguler': return 'Reguler';
-            case 'intensif': return 'Intensif';
-            default: return value || '-';
+        switch (value) {
+            case 'reguler':
+                return 'Reguler';
+            case 'intensif':
+                return 'Intensif';
+            default:
+                return value || '-';
         }
     };
 
@@ -363,7 +459,8 @@ export const ConfirmationStep: React.FC<FormComponentProps> = ({
                 📋 Konfirmasi Data Pendaftaran
             </h4>
             <p className="mb-8 text-center text-gray-600">
-                Mohon periksa kembali semua data yang telah Anda masukkan sebelum submit.
+                Mohon periksa kembali semua data yang telah Anda masukkan
+                sebelum submit.
             </p>
 
             {/* Tampilan Ringkasan Data */}
@@ -374,12 +471,25 @@ export const ConfirmationStep: React.FC<FormComponentProps> = ({
                         <h5 className="mb-3 border-b pb-2 text-lg font-semibold text-green-700">
                             👤 Data Santri
                         </h5>
-                        <SummaryField label="Nama Lengkap" value={formData.nama} />
-                        <SummaryField label="Tanggal Lahir" value={formData.tanggalLahir} />
-                        <SummaryField label="Tempat Lahir" value={formData.tempatLahir} />
-                        <SummaryField 
-                            label="Alamat Lengkap" 
-                            value={formData.alamatPribadi} 
+                        <SummaryField
+                            label="Nama Lengkap"
+                            value={formData.nama}
+                        />
+                        <SummaryField
+                            label="Jenis Kelamin"
+                            value={formData.jenisKelamin}
+                        />
+                        <SummaryField
+                            label="Tanggal Lahir"
+                            value={formData.tanggalLahir}
+                        />
+                        <SummaryField
+                            label="Tempat Lahir"
+                            value={formData.tempatLahir}
+                        />
+                        <SummaryField
+                            label="Alamat Lengkap"
+                            value={formData.alamatPribadi}
                             className="col-span-2"
                         />
                     </div>
@@ -389,19 +499,22 @@ export const ConfirmationStep: React.FC<FormComponentProps> = ({
                         <h5 className="mb-3 border-b pb-2 text-lg font-semibold text-blue-700">
                             🏫 Data Sekolah
                         </h5>
-                        <SummaryField label="Nama Sekolah Asal" value={formData.namaSekolah} />
-                        <SummaryField 
-                            label="Alamat Sekolah" 
-                            value={formData.alamatSekolah} 
+                        <SummaryField
+                            label="Nama Sekolah Asal"
+                            value={formData.namaSekolah}
+                        />
+                        <SummaryField
+                            label="Alamat Sekolah"
+                            value={formData.alamatSekolah}
                             className="col-span-2"
                         />
-                        <SummaryField 
-                            label="Program Pilihan" 
-                            value={getProgramLabel(formData.programPilihan)} 
+                        <SummaryField
+                            label="Program Pilihan"
+                            value={getProgramLabel(formData.programPilihan)}
                         />
-                        <SummaryField 
-                            label="Mengetahui dari" 
-                            value={formData.dariSiapa} 
+                        <SummaryField
+                            label="Mengetahui dari"
+                            value={formData.dariSiapa}
                         />
                     </div>
 
@@ -410,12 +523,21 @@ export const ConfirmationStep: React.FC<FormComponentProps> = ({
                         <h5 className="mb-3 border-b pb-2 text-lg font-semibold text-purple-700">
                             👨‍👩‍👧‍👦 Data Orang Tua
                         </h5>
-                        <SummaryField label="Nama Lengkap" value={formData.namaPanjangOrtu} />
-                        <SummaryField label="Profesi" value={formData.profesiOrtu} />
-                        <SummaryField label="Telepon" value={formData.teleponOrangTua} />
-                        <SummaryField 
-                            label="Alamat (KTP/KK)" 
-                            value={formData.alamatOrtu} 
+                        <SummaryField
+                            label="Nama Lengkap"
+                            value={formData.namaPanjangOrtu}
+                        />
+                        <SummaryField
+                            label="Profesi"
+                            value={formData.profesiOrtu}
+                        />
+                        <SummaryField
+                            label="Telepon"
+                            value={formData.teleponOrangTua}
+                        />
+                        <SummaryField
+                            label="Alamat (KTP/KK)"
+                            value={formData.alamatOrtu}
                             className="col-span-2"
                         />
                     </div>
@@ -426,18 +548,63 @@ export const ConfirmationStep: React.FC<FormComponentProps> = ({
             <div className="mb-8 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
                 <div className="flex items-start">
                     <div className="mr-3 text-yellow-600">
-                        <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        <svg
+                            className="h-6 w-6"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                        >
+                            <path
+                                fillRule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                clipRule="evenodd"
+                            />
                         </svg>
                     </div>
                     <div>
-                        <h6 className="font-semibold text-yellow-800">Perhatian:</h6>
+                        <h6 className="font-semibold text-yellow-800">
+                            Perhatian:
+                        </h6>
                         <p className="text-sm text-yellow-700">
-                            Pastikan semua data sudah benar. Data yang sudah disubmit tidak dapat diubah.
+                            Pastikan semua data sudah benar. Data yang sudah
+                            disubmit tidak dapat diubah.
                         </p>
                     </div>
+                    
                 </div>
             </div>
+
+            {
+                cekVal && (
+                    cekVal.map((data, index) => (
+                        <div className="mb-8 rounded-lg border border-red-200 bg-red-50 p-4">
+                            <div className="flex items-start">
+                                <div className="mr-3 text-red-600">
+                                    <svg
+                                        className="h-6 w-6"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path
+                                            fillRule="evenodd"
+                                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                            clipRule="evenodd"
+                                        />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h6 className="font-semibold text-red-800">
+                                        Form Kosong: {data}
+                                    </h6>
+                                    <p className="text-sm text-red-700">
+                                        Ada form yang belum terisi, tolong lengkapi form tersebut;
+                                    </p>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    ))
+                )
+            }
 
             {/* Tombol Aksi */}
             <div className="flex flex-col justify-between gap-4 sm:flex-row">
@@ -456,9 +623,16 @@ export const ConfirmationStep: React.FC<FormComponentProps> = ({
                     </button>
                     <button
                         onClick={handleSubmit}
+                        disabled={isLoading}
                         className="rounded-lg bg-green-600 px-6 py-3 font-semibold text-white shadow-md transition duration-150 hover:bg-green-700 sm:px-8"
                     >
-                        ✅ Submit Pendaftaran
+                        {
+                            isLoading ? (
+                                <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                            ) : (
+                                <span>✅ Submit Pendaftaran</span>
+                            )
+                        }
                     </button>
                 </div>
             </div>

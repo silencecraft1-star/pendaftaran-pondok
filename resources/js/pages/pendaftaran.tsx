@@ -37,6 +37,7 @@ const initialFormData: FormData = {
     tanggalLahir: '',
     tempatLahir: '',
     teleponOrangTua: '',
+    jenisKelamin: '',
     alamatPribadi: '',
     namaSekolah: '',
     alamatSekolah: '',
@@ -188,8 +189,21 @@ export default function Pendaftaran() {
                         PORTAL PENDAFTARAN
                     </div>
                     <div className="mt-1 text-lg font-bold text-gray-700 sm:text-xl lg:text-2xl">
-                        PONDOK MODERN AR - RAHMAH
+                        PONDOK PESANTREN MODERN ARRAHMAH
                     </div>
+                </div>
+
+                <div className="fixed bottom-5 -left-5 z-50 flex w-full items-end justify-end">
+                    <a href="https://api.whatsapp.com/send/?phone=6285850180698&text&type=phone_number&app_absent=0">
+                        <button className="text-green flex items-center rounded-full border border-green-500 bg-green-50 px-5 font-bold text-green-500 transition-all hover:scale-110 hover:cursor-pointer hover:bg-green-100">
+                            <img
+                                src="/images/wa.webp"
+                                className="size-10"
+                                alt="whatsapp"
+                            />
+                            Hubungi Admin
+                        </button>
+                    </a>
                 </div>
 
                 <div className="mx-auto w-full max-w-6xl rounded-xl border border-gray-100 bg-white p-4 shadow-lg sm:p-6 md:p-8 lg:p-12 xl:p-16">

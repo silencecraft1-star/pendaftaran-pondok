@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PendaftarController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -13,6 +14,8 @@ use Laravel\Fortify\Features;
 Route::get('/', function () {
     return Inertia::render('pendaftaran');
 })->name('home');
+
+Route::post('/submit-data', [PendaftarController::class, 'store'])->name('submit-data');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
