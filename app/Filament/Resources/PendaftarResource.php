@@ -149,8 +149,8 @@ class PendaftarResource extends Resource
                         ->helperText('Pilih program sesuai kebutuhan belajar')
                         ->required()
                         ->options([
-                            'Reguler' => 'Reguler (Kelas reguler)',
-                            'Intensif' => 'Intensif (Kelas khusus)',
+                            'reguler' => 'Reguler (Kelas reguler)',
+                            'intensif' => 'Intensif (Kelas khusus)',
                         ])
                         ->native(false),
 
