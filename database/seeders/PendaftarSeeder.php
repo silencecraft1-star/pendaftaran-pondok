@@ -22,9 +22,9 @@ class PendaftarSeeder extends Seeder
                 'alamat_sekolah' => 'Jl. A. Yani No. 45, Nganjuk',
                 'nama_panjang_ortu' => 'Budi Santoso',
                 'profesi_ortu' => 'Petani',
-                'jenis_kelamin' => 'Laki-laki',
+                'jenis_kelamin' => 'laki',
                 'alamat_ortu' => 'Jl. Melati No. 12, Nganjuk',
-                'program_pilihan' => 'Reguler',
+                'program_pilihan' => 'reguler',
                 'dari_siapa' => 'Teman',
                 'is_verified' => true,
             ],
@@ -36,7 +36,7 @@ class PendaftarSeeder extends Seeder
         $kota = ['Nganjuk','Kediri','Jombang','Tulungagung'];
         $profesi = ['Petani','Wiraswasta','PNS','Guru','Pedagang'];
         $sumber = ['Teman','Media Sosial','Guru','Orang Tua','Banner'];
-        $program = ['Reguler','Intensif'];
+        $program = ['reguler','intensif'];
 
         for ($i = 1; $i <= 29; $i++) {
             $data[] = [
@@ -49,7 +49,7 @@ class PendaftarSeeder extends Seeder
                 'alamat_sekolah' => 'Jl. Pendidikan No. ' . rand(1, 50) . ', ' . $kota[array_rand($kota)],
                 'nama_panjang_ortu' => $namaDepan[array_rand($namaDepan)] . ' ' . $namaBelakang[array_rand($namaBelakang)],
                 'profesi_ortu' => $profesi[array_rand($profesi)],
-                'jenis_kelamin' => rand(0,1) ? 'Laki-laki' : 'Perempuan',
+                'jenis_kelamin' => rand(0,1) ? 'laki' : 'perempuan',
                 'alamat_ortu' => 'Jl. Kenanga No. ' . rand(1, 100) . ', ' . $kota[array_rand($kota)],
                 'program_pilihan' => $program[array_rand($program)],
                 'dari_siapa' => $sumber[array_rand($sumber)],
