@@ -117,6 +117,7 @@ class PendaftarResource extends Resource
                         ->placeholder('Contoh: 081234567890')
                         ->helperText('Nomor yang dapat dihubungi (WA aktif)')
                         ->required()
+                        ->numeric()
                         ->tel()
                         ->maxLength(20)
                         ->prefix('+62')
@@ -243,8 +244,8 @@ class PendaftarResource extends Resource
 
                 Tables\Filters\SelectFilter::make('program_pilihan')
                     ->options([
-                        'Reguler' => 'Reguler',
-                        'Intensif' => 'Intensif',
+                        'reguler' => 'Reguler',
+                        'intensif' => 'Intensif',
                     ]),
 
                 Tables\Filters\Filter::make('created_at')
