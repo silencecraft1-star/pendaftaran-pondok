@@ -49,4 +49,9 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+     public function canAccessPanel(Panel $panel): bool
+    {
+        return str_ends_with($this->email, '@nustrastudio.my.id') && $this->hasVerifiedEmail();
+    }
 }
