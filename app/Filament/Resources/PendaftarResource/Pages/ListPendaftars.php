@@ -6,8 +6,9 @@ use App\Filament\Resources\PendaftarResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Actions\Exports\Enums\ExportFormat;
-use App\Filament\Exports\PendaftarExporter;
+use App\Exports\PendaftarExport;
 use Filament\Forms\Components\DatePicker;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ListPendaftars extends ListRecords
 {
@@ -20,15 +21,10 @@ class ListPendaftars extends ListRecords
                 ->label('Tambah Pendaftar')
                 ->icon('heroicon-o-plus-circle'),
 
-            Actions\ExportAction::make()
-                ->exporter(PendaftarExporter::class)
+            Actions\Action::make('export')
+                ->label('Export Data Pendaftar')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
-                ->columnMapping(false)
-                ->formats([
-                    ExportFormat::Xlsx,
-                    ExportFormat::Csv,
-                ])
                 ->form([
                     DatePicker::make('date_from')
                         ->label('Dari Tanggal')
@@ -38,12 +34,16 @@ class ListPendaftars extends ListRecords
                         ->label('Sampai Tanggal')
                         ->default(now()),
                 ])
+                ->action(function (array $data) {
+                    return Excel::download(
+                        new PendaftarExport(
+                            $data['date_from'] ?? null,
+                            $data['date_until'] ?? null,
+                        ),
+                        'pendaftar_' . now()->format('Y-m-d') . '.xlsx'
+                    );
+                })
         ];
-    }
-
-    private function exportToExcel()
-    {
-        // Implementasi export ke Excel
     }
 
     protected function getHeaderWidgets(): array
